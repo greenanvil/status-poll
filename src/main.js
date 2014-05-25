@@ -69,6 +69,10 @@
 
                     testCount++;
 
+                    if( typeof conf.onTic === 'function'){
+                        conf.onTic( res );
+                    }
+
                     // Check for success...
                     if( testCount < conf.maxTries && !statusResultTest( res.status )){
                         // We still have tests and aren't successful yet... run the test again after a timeout
@@ -100,13 +104,16 @@
 
     // Poll until ready status is achieved or we run out of tests
     pollForReadyStatus({
-        maxTries: 10,
+        maxTries: 12,
         pollTime: 100,
         onSuccess: function(){
             console.log( 'Ready!!!!' );
         },
         onFail: function(){
             console.log( 'Sorry, unable to achieve ready status in time.' );
+        },
+        onTic: function( res ){
+            console.log('onTic()', res);
         }
     });
 

@@ -33,7 +33,7 @@ module.exports = function (grunt) {
 
         watch: {
             jshint: {
-                files: ['scripts/main.js'],
+                files: ['src/main.js'],
                 tasks: ['jshint']
             },
             compass: {
@@ -46,7 +46,7 @@ module.exports = function (grunt) {
         },
 
         jshint: {
-            all: ['scripts/main.js']
+            all: ['src/main.js']
         },
 
         clean: {

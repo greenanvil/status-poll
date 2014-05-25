@@ -1,5 +1,7 @@
 (function(){
 
+    'use strict';
+
     var reqCount = 0,
         readyOnTest = 10;
 
@@ -53,6 +55,12 @@
                 conf.maxTries = 10;
             }
 
+            // Make sure the pollTime is a number and greater than 0
+            if( typeof conf.pollTime !== 'number' || conf.pollTime < 1 ){
+                // If it's not, set the default to 10
+                conf.pollTime = 100;
+            }
+
             // Begin the test cycle
             (function performStatusCheck(){
 
@@ -75,7 +83,7 @@
                     }
                 });
             })(); // end: performStatusCheck
-        }
+        };
     }
 
     /**
@@ -92,7 +100,7 @@
 
     // Poll until ready status is achieved or we run out of tests
     pollForReadyStatus({
-        maxTries: 12,
+        maxTries: 10,
         pollTime: 100,
         onSuccess: function(){
             console.log( 'Ready!!!!' );

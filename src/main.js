@@ -15,8 +15,10 @@
 
         reqCount++;
 
+        var status = reqCount < readyOnTest ? 'notReady' : 'ready';
+
         cb({
-            status: reqCount < readyOnTest ? 'notReady' : 'ready'
+            status: status
         });
     }
 
@@ -37,11 +39,12 @@
      *     </pre>
      * </p>
      *
-     * @param getStatus         The function to call to fetch the status
-     * @param statusResultTest  The function to test the status return against to determine success
+     * @param getStatus             The function to call to fetch the status
+     * @param statusResultSuccess   The function to test the status return against to determine success
+     * @param statusResultAbort     The function to test the status return against to detect an abort condition
      * @returns {Function}
      */
-    function pollForStatus( getStatus, statusResultTest ){
+    function pollForStatus( getStatus, statusResultSuccess, statusResultAbort ){
 
         // The number of times the test has been run
         var testCount = 0;
@@ -64,22 +67,27 @@
             // Begin the test cycle
             (function performStatusCheck(){
 
+                // Count our test calls so we can max out
+                testCount++;
+
                 // Call the status check function
                 getStatus( function( res ){
 
-                    testCount++;
-
                     if( typeof conf.onTic === 'function'){
-                        conf.onTic( res );
+                        conf.onTic( res, testCount );
                     }
 
+                    var canStillTry =   testCount < conf.maxTries,
+                        succeeded =     statusResultSuccess( res.status ),
+                        aborted =       statusResultAbort( res.status );
+
                     // Check for success...
-                    if( testCount < conf.maxTries && !statusResultTest( res.status )){
-                        // We still have tests and aren't successful yet... run the test again after a timeout
+                    if( canStillTry && !succeeded && !aborted ){
+                        // We still have tests, haven't aborted and aren't successful yet... run the test (in a moment)
                         window.setTimeout( performStatusCheck, conf.pollTime );
                     } else {
-                        // We were successful or ran out of tests
-                        if( res.status === 'ready'){
+                        // We were successful, ran out of tests or aborted
+                        if( succeeded ){
                             conf.onSuccess();
                         } else {
                             conf.onFail();
@@ -93,28 +101,29 @@
     /**
      * A method provided by pollForStatus that expects a configuration object with properties for maxTries, pollTime,
      * onSuccess and onFail
-     * @param conf          The configuration object
+     * @param conf          An object that configures the status poll
      */
-    var pollForReadyStatus = pollForStatus(
+    var readyStatusPoll = pollForStatus(
         getStatus,
-        function( status ){
+        function successCondition( status ){
             return status === 'ready';
+        },
+        function abortCondition( status ){
+            return status === 'abort';
         });
 
-
     // Poll until ready status is achieved or we run out of tests
-    pollForReadyStatus({
-        maxTries: 12,
+    readyStatusPoll({
+        maxTries: 20,
         pollTime: 100,
         onSuccess: function(){
-            console.log( 'Ready!!!!' );
+            console.log( 'readyStatusPoll Ready!!!!' );
         },
         onFail: function(){
             console.log( 'Sorry, unable to achieve ready status in time.' );
         },
-        onTic: function( res ){
-            console.log('onTic()', res);
+        onTic: function( res, ct ){
+            console.log('readyStatusPoll onTic():' + ct, res);
         }
     });
-
 })();

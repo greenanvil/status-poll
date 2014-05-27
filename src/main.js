@@ -2,6 +2,10 @@
 
     'use strict';
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Test harness that provides the getStatus method we'll be using
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     var reqCount = 0,
         readyOnTest = 10;
 
@@ -15,12 +19,14 @@
 
         reqCount++;
 
-        var status = reqCount < readyOnTest ? 'notReady' : 'ready';
-
         cb({
-            status: status
+            status: reqCount < readyOnTest ? 'notReady' : 'ready'
         });
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // The main pollForStatus base function. Used to build status polls with specific triggers and params
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Returns a function that will perform a status check and test it's results a limited number of times. The inner
@@ -73,13 +79,14 @@
                 // Call the status check function
                 getStatus( function( res ){
 
-                    if( typeof conf.onTic === 'function'){
-                        conf.onTic( res, testCount );
-                    }
-
                     var canStillTry =   testCount < conf.maxTries,
                         succeeded =     statusResultSuccess( res.status ),
                         aborted =       statusResultAbort( res.status );
+
+                    // Pass the latest response and test count to the onTic callback if it's defined
+                    if( typeof conf.onTic === 'function'){
+                        conf.onTic( res, testCount );
+                    }
 
                     // Check for success...
                     if( canStillTry && !succeeded && !aborted ){
@@ -98,6 +105,11 @@
         };
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Create a completed poll for status function that calls the getStatus test harness method and looks for a
+    // returned status value of 'ready' to succeed or a value of 'abort' to abort.
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * A method provided by pollForStatus that expects a configuration object with properties for maxTries, pollTime,
      * onSuccess and onFail
@@ -111,6 +123,10 @@
         function abortCondition( status ){
             return status === 'abort';
         });
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Configure the poll. It's started automatically.
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Poll until ready status is achieved or we run out of tests
     readyStatusPoll({

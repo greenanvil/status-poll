@@ -50,7 +50,7 @@
      * @param statusResultAbort     The function to test the status return against to detect an abort condition
      * @returns {Function}
      */
-    function pollForStatus( getStatus, statusResultSuccess, statusResultAbort ){
+    function createStatusPollFunction( getStatus, statusResultSuccess, statusResultAbort ){
 
         // The number of times the test has been run
         var testCount = 0;
@@ -80,8 +80,8 @@
                 getStatus( function( res ){
 
                     var canStillTry =   testCount < conf.maxTries,
-                        succeeded =     statusResultSuccess( res.status ),
-                        aborted =       statusResultAbort( res.status );
+                        succeeded =     statusResultSuccess( res ),
+                        aborted =       statusResultAbort( res );
 
                     // Pass the latest response and test count to the onTic callback if it's defined
                     if( typeof conf.onTic === 'function'){
@@ -115,13 +115,13 @@
      * onSuccess and onFail
      * @param conf          An object that configures the status poll
      */
-    var readyStatusPoll = pollForStatus(
+    var readyStatusPoll = createStatusPollFunction(
         getStatus,
-        function successCondition( status ){
-            return status === 'ready';
+        function successCondition( res ){
+            return res.status === 'ready';
         },
-        function abortCondition( status ){
-            return status === 'abort';
+        function abortCondition( res ){
+            return res.status === 'abort';
         });
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -52,11 +52,11 @@
      */
     function createStatusPollFunction( getStatus, statusResultSuccess, statusResultAbort ){
 
-        // The number of times the test has been run
-        var testCount = 0;
-
         // The returned function, expects a config object
         return function( conf ){
+
+            // The number of times the test has been run
+            var testCount = 0;
 
             // Make sure the number of max tries is a number and greater than 0
             if( typeof conf.maxTries !== 'number' || conf.maxTries < 1 ){
